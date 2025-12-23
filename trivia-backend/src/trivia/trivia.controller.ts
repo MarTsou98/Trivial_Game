@@ -1,4 +1,10 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  ParseIntPipe,
+  DefaultValuePipe,
+} from '@nestjs/common';
 import { TriviaService } from './trivia.service';
 import { TriviaQuestionDto } from './dto/trivia-question.dto';
 
@@ -13,21 +19,22 @@ export class TriviaController {
    * - amount: number of questions (default 10)
    * - difficulty: 'easy' | 'medium' | 'hard'
    * - category: numeric category ID
-   * - type: 'boolean' or 'multiple'
+   * - type: 'boolean' | 'multiple'
    */
   @Get('questions')
   async getQuestions(
-    @Query('amount') amount?: string,
-    @Query('difficulty') difficulty?: string,
-    @Query('category') category?: string,
-    @Query('type') type?: string,
+    @Query('amount', new DefaultValuePipe(10), ParseIntPipe) amount: number,
+    @Query('difficulty') difficulty?: 'easy' | 'medium' | 'hard',
+    @Query('category', new DefaultValuePipe(undefined), ParseIntPipe)
+    category?: number,
+    @Query('type') type?: 'boolean' | 'multiple',
   ): Promise<TriviaQuestionDto[]> {
-    // Parse query parameters and set defaults
-    const amt = amount ? parseInt(amount) : 10;
-    const cat = category ? parseInt(category) : undefined;
-    const qType = type === 'multiple' ? 'multiple' : 'boolean';
-
-    // Delegate fetching to TriviaService
-    return this.triviaService.fetchQuestions(amt, difficulty, cat, qType);
+    const questionType = type === 'multiple' ? 'multiple' : 'boolean';
+    return this.triviaService.fetchQuestions(
+      amount,
+      difficulty,
+      category,
+      questionType,
+    );
   }
 }
